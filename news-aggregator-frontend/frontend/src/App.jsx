@@ -1,0 +1,141 @@
+/*
+📰 Full-Stack News Aggregator App – Enhanced Frontend
+-----------------------------------------------------
+This is the updated React codebase for your news summarizer app with:
+1. User Login (localStorage based)
+2. Bookmarks functionality
+3. Category filters (Tech, Sports, etc.)
+4. Full article view with date/time & summarize button
+5. Sidebar with Top 10 Headlines
+6. Improved plain CSS-based UI
+*/
+
+// src/App.jsx
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import './index.css';
+
+const CATEGORIES = ['Technology', 'Sports', 'Business', 'Entertainment', 'Health', 'Science'];
+
+function App() {
+  const [user, setUser] = useState(localStorage.getItem('user') || '');
+  const [query, setQuery] = useState('technology');
+  const [articles, setArticles] = useState([]);
+  const [topHeadlines, setTopHeadlines] = useState([]);
+  const [selectedArticle, setSelectedArticle] = useState(null);
+  const [summary, setSummary] = useState('');
+  const [bookmarks, setBookmarks] = useState(
+    JSON.parse(localStorage.getItem('bookmarks') || '[]')
+  );
+
+  const fetchNews = async () => {
+    const res = await axios.get(`http://localhost:5000/news?q=${query}`);
+    setArticles(res.data.articles);
+  };
+
+  const fetchHeadlines = async () => {
+    const res = await axios.get('http://localhost:5000/news?q=top');
+    setTopHeadlines(res.data.articles.slice(0, 10));
+  };
+
+  const summarizeArticle = async (article) => {
+    setSelectedArticle(article);
+    setSummary('Loading...');
+    const res = await axios.post('http://localhost:5000/summarize', {
+      text: article.content || article.description,
+    });
+    setSummary(res.data.summary);
+  };
+
+  const login = () => {
+    const name = prompt('Enter your username:');
+    if (name) {
+      setUser(name);
+      localStorage.setItem('user', name);
+    }
+  };
+
+  const toggleBookmark = (article) => {
+    const updated = bookmarks.some(a => a.title === article.title)
+      ? bookmarks.filter(a => a.title !== article.title)
+      : [...bookmarks, article];
+    setBookmarks(updated);
+    localStorage.setItem('bookmarks', JSON.stringify(updated));
+  };
+
+  useEffect(() => {
+    fetchNews();
+    fetchHeadlines();
+  }, [query]);
+
+  return (
+    <div className="layout">
+      <aside className="sidebar">
+        <h2>Top Headlines</h2>
+        <ul>
+          {topHeadlines.map((a, i) => (
+            <li key={i} onClick={() => setSelectedArticle(a)}>{a.title}</li>
+          ))}
+        </ul>
+        <div className="login">
+          {user ? <p>👤 {user}</p> : <button onClick={login}>Login</button>}
+        </div>
+      </aside>
+
+      <main className="main">
+        <h1 className="title">AI News Summarizer</h1>
+
+        <div className="controls">
+          <input value={query} onChange={e => setQuery(e.target.value)} />
+          <button onClick={fetchNews}>Search</button>
+          <select onChange={e => setQuery(e.target.value)} value={query}>
+            {CATEGORIES.map(cat => (
+              <option key={cat} value={cat.toLowerCase()}>{cat}</option>
+            ))}
+          </select>
+        </div>
+
+        <section className="grid">
+          {articles.map((a, i) => (
+            <div key={i} className="card">
+              <h3>{a.title}</h3>
+              <p><strong>{a.source.name}</strong> | {new Date(a.publishedAt).toLocaleString()}</p>
+              <button onClick={() => setSelectedArticle(a)}>View</button>
+              <button onClick={() => summarizeArticle(a)}>Summarize</button>
+              <button onClick={() => toggleBookmark(a)}>
+                {bookmarks.some(b => b.title === a.title) ? 'Unbookmark' : 'Bookmark'}
+              </button>
+            </div>
+          ))}
+        </section>
+
+        <section className="bookmarks">
+          <h2>🔖 Bookmarks</h2>
+          {bookmarks.map((a, i) => (
+            <div key={i} className="card">
+              <h3>{a.title}</h3>
+              <button onClick={() => setSelectedArticle(a)}>View</button>
+            </div>
+          ))}
+        </section>
+      </main>
+
+      {selectedArticle && (
+        <div className="modal">
+          <div className="modal-content">
+            <h2>{selectedArticle.title}</h2>
+            <p><strong>{selectedArticle.source.name}</strong></p>
+            <p>{new Date(selectedArticle.publishedAt).toLocaleString()}</p>
+            <p>{selectedArticle.content || selectedArticle.description}</p>
+            <h3>🧠 Summary</h3>
+            <p>{summary || 'Click summarize to view.'}</p>
+            <button onClick={() => summarizeArticle(selectedArticle)}>Summarize</button>
+            <button onClick={() => setSelectedArticle(null)}>Close</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;
