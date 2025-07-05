@@ -29,22 +29,54 @@ function App() {
   );
 
   const fetchNews = async () => {
-    const res = await axios.get(`http://localhost:5000/news?q=${query}`);
-    setArticles(res.data.articles);
+    try {
+      const res = await axios.get(`http://localhost:5000/news?q=${query}`);
+      setArticles(res.data.articles);
+    } catch (error) {
+      console.error('Error fetching news:', error);
+      alert('Failed to fetch news. Please check if the backend server is running.');
+    }
   };
 
   const fetchHeadlines = async () => {
-    const res = await axios.get('http://localhost:5000/news?q=top');
-    setTopHeadlines(res.data.articles.slice(0, 10));
+    try {
+      const res = await axios.get('http://localhost:5000/news?q=top');
+      setTopHeadlines(res.data.articles.slice(0, 10));
+    } catch (error) {
+      console.error('Error fetching headlines:', error);
+      // Don't show alert for headlines as it's not critical
+    }
   };
 
   const summarizeArticle = async (article) => {
-    setSelectedArticle(article);
-    setSummary('Loading...');
-    const res = await axios.post('http://localhost:5000/summarize', {
-      text: article.content || article.description,
-    });
-    setSummary(res.data.summary);
+    try {
+      setSelectedArticle(article);
+      setSummary('Loading...');
+      
+      // Check if article has content to summarize
+      const textToSummarize = article.content || article.description;
+      if (!textToSummarize) {
+        setSummary('No content available to summarize.');
+        return;
+      }
+      
+      console.log('Sending text for summarization:', textToSummarize.substring(0, 100) + '...');
+      
+      const res = await axios.post('http://localhost:5000/summarize', {
+        text: textToSummarize,
+      });
+      setSummary(res.data.summary);
+    } catch (error) {
+      console.error('Error summarizing article:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Full error details:', JSON.stringify(error.response?.data, null, 2));
+      
+      const errorMsg = error.response?.data?.details 
+        ? JSON.stringify(error.response.data.details, null, 2)
+        : error.message;
+      
+      setSummary(`Failed to generate summary: ${errorMsg}`);
+    }
   };
 
   const login = () => {
