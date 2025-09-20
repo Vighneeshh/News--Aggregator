@@ -52,6 +52,9 @@ app.get('/health', (req, res) => {
 app.get('/headlines', async (req, res) => {
     try {
         console.log('Fetching real headlines from News API...');
+        console.log('News API Key exists:', !!process.env.NEWS_API_KEY);
+        console.log('News API Key length:', process.env.NEWS_API_KEY?.length);
+        
         const country = req.query.country || 'us';
         const category = req.query.category || '';
         const pageSize = req.query.pageSize || 20;
@@ -61,11 +64,26 @@ app.get('/headlines', async (req, res) => {
             url += `&category=${category}`;
         }
         
+        console.log('Making request to:', url.replace(process.env.NEWS_API_KEY, '[API_KEY]'));
         const response = await axios.get(url);
         console.log(`✅ Headlines fetched successfully: ${response.data.articles?.length} articles`);
+        
+        // Log first article to verify data quality
+        if (response.data.articles && response.data.articles.length > 0) {
+            const first = response.data.articles[0];
+            console.log('First article sample:', {
+                title: first.title?.substring(0, 50),
+                source: first.source?.name,
+                hasImage: !!first.urlToImage,
+                imageUrl: first.urlToImage?.substring(0, 50)
+            });
+        }
+        
         res.json(response.data);
     } catch (error) {
         console.error('❌ Error fetching headlines:', error.response?.data || error.message);
+        console.error('Error status:', error.response?.status);
+        console.error('Error headers:', error.response?.headers);
         
         // Fallback to mock data if API fails
         console.log('🔄 Falling back to mock headlines data');
@@ -103,6 +121,8 @@ app.get('/headlines', async (req, res) => {
 app.get('/news', async (req, res) => {
     try {
         console.log('Fetching real news from News API...');
+        console.log('News API Key exists:', !!process.env.NEWS_API_KEY);
+        
         const query = req.query.q || 'technology OR science OR business OR health';
         const language = req.query.language || 'en';
         const sortBy = req.query.sortBy || 'publishedAt';
@@ -111,11 +131,25 @@ app.get('/news', async (req, res) => {
         
         const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=${language}&sortBy=${sortBy}&pageSize=${pageSize}&page=${page}&apiKey=${process.env.NEWS_API_KEY}`;
         
+        console.log('Making request to:', url.replace(process.env.NEWS_API_KEY, '[API_KEY]'));
         const response = await axios.get(url);
         console.log(`✅ News fetched successfully: ${response.data.articles?.length} articles`);
+        
+        // Log first article to verify data quality
+        if (response.data.articles && response.data.articles.length > 0) {
+            const first = response.data.articles[0];
+            console.log('First news article sample:', {
+                title: first.title?.substring(0, 50),
+                source: first.source?.name,
+                hasImage: !!first.urlToImage,
+                imageUrl: first.urlToImage?.substring(0, 50)
+            });
+        }
+        
         res.json(response.data);
     } catch (error) {
         console.error('❌ Error fetching news:', error.response?.data || error.message);
+        console.error('Error status:', error.response?.status);
         
         // Fallback to mock data if API fails
         console.log('🔄 Falling back to mock news data');

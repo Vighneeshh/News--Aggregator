@@ -13,14 +13,14 @@ function App() {
   const fetchNews = async () => {
     setLoading(true)
     try {
-      console.log('Fetching news from http://news-aggregator-pppy.onrender.com/news')
-      const response = await fetch('http://news-aggregator-pppy.onrender.com/news')
+      console.log('Fetching news from https://news-aggregator-pppy.onrender.com/news')
+      const response = await fetch('https://news-aggregator-pppy.onrender.com/news')
       const data = await response.json()
       setNews(data.articles || [])
       console.log('Fetched news:', data.articles?.length, 'articles')
     } catch (error) {
       console.error('Error fetching news:', error)
-      alert('Error fetching news. Make sure backend is running on port 5001.')
+      alert('Error fetching news from deployed backend. Please check your connection.')
     }
     setLoading(false)
   }
@@ -28,14 +28,14 @@ function App() {
   const fetchHeadlines = async () => {
     setLoading(true)
     try {
-      console.log('Fetching headlines from http://news-aggregator-pppy.onrender.com/headlines')
-      const response = await fetch('http://news-aggregator-pppy.onrender.com/headlines')
+      console.log('Fetching headlines from https://news-aggregator-pppy.onrender.com/headlines')
+      const response = await fetch('https://news-aggregator-pppy.onrender.com/headlines')
       const data = await response.json()
       setHeadlines(data.articles || [])
       console.log('Fetched headlines:', data.articles?.length, 'articles')
     } catch (error) {
       console.error('Error fetching headlines:', error)
-      alert('Error fetching headlines. Make sure backend is running on port 5001.')
+      alert('Error fetching headlines from deployed backend. Please check your connection.')
     }
     setLoading(false)
   }
@@ -53,7 +53,7 @@ function App() {
     
     try {
       console.log('Getting AI summary for:', article.title)
-      const response = await fetch('http://news-aggregator-pppy.onrender.com/summarize', {
+      const response = await fetch('https://news-aggregator-pppy.onrender.com/summarize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
