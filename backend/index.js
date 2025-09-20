@@ -65,7 +65,11 @@ app.get('/headlines', async (req, res) => {
         }
         
         console.log('Making request to:', url.replace(process.env.NEWS_API_KEY, '[API_KEY]'));
-        const response = await axios.get(url);
+        const response = await axios.get(url, {
+            headers: {
+                'User-Agent': 'News-Aggregator/1.0 (https://news-aggregator-pppy.onrender.com)'
+            }
+        });
         console.log(`✅ Headlines fetched successfully: ${response.data.articles?.length} articles`);
         
         // Log first article to verify data quality
@@ -132,7 +136,11 @@ app.get('/news', async (req, res) => {
         const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=${language}&sortBy=${sortBy}&pageSize=${pageSize}&page=${page}&apiKey=${process.env.NEWS_API_KEY}`;
         
         console.log('Making request to:', url.replace(process.env.NEWS_API_KEY, '[API_KEY]'));
-        const response = await axios.get(url);
+        const response = await axios.get(url, {
+            headers: {
+                'User-Agent': 'News-Aggregator/1.0 (https://news-aggregator-pppy.onrender.com)'
+            }
+        });
         console.log(`✅ News fetched successfully: ${response.data.articles?.length} articles`);
         
         // Log first article to verify data quality
