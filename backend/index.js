@@ -148,31 +148,51 @@ app.get('/headlines', async (req, res) => {
         console.error('Error status:', error.response?.status);
         console.error('Error headers:', error.response?.headers);
         
-        // Fallback to mock data if API fails
-        console.log('🔄 Falling back to mock headlines data');
+        // Enhanced fallback with more realistic mock data
+        console.log('🔄 Using enhanced mock headlines data');
         const mockHeadlines = {
             status: "ok",
-            totalResults: 2,
+            totalResults: 8,
             articles: [
                 {
-                    source: { id: "cnn", name: "CNN" },
-                    author: "CNN Staff",
-                    title: "Breaking: Major Technology Breakthrough Announced",
-                    description: "Scientists have made a significant breakthrough in quantum computing technology.",
-                    url: "https://example.com/tech-breakthrough",
-                    urlToImage: "https://via.placeholder.com/400x200/0066cc/ffffff?text=Tech+News",
+                    source: { id: "bbc-news", name: "BBC News" },
+                    author: "BBC Technology Reporter",
+                    title: "Breakthrough in Quantum Computing Achieved by Tech Giants",
+                    description: "Major technology companies announce significant progress in quantum computing capabilities, potentially revolutionizing data processing.",
+                    url: "https://example.com/quantum-breakthrough",
+                    urlToImage: "https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=800&h=400&fit=crop",
                     publishedAt: new Date().toISOString(),
-                    content: "Scientists have made a significant breakthrough..."
+                    content: "Major technology companies have announced significant progress in quantum computing capabilities..."
                 },
                 {
-                    source: { id: "bbc", name: "BBC News" },
-                    author: "BBC Reporter", 
-                    title: "Global Climate Summit Reaches Historic Agreement",
-                    description: "World leaders have reached a consensus on new climate policies.",
-                    url: "https://example.com/climate-summit",
-                    urlToImage: "https://via.placeholder.com/400x200/009900/ffffff?text=Climate+News",
+                    source: { id: "cnn", name: "CNN" },
+                    author: "CNN Health Team",
+                    title: "New Medical AI System Shows Promise in Early Disease Detection",
+                    description: "Artificial intelligence technology demonstrates remarkable accuracy in identifying early-stage diseases during clinical trials.",
+                    url: "https://example.com/medical-ai",
+                    urlToImage: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&h=400&fit=crop",
+                    publishedAt: new Date(Date.now() - 1800000).toISOString(),
+                    content: "A new artificial intelligence system has shown remarkable accuracy in detecting early-stage diseases..."
+                },
+                {
+                    source: { id: "reuters", name: "Reuters" },
+                    author: "Reuters Business",
+                    title: "Renewable Energy Sector Reaches New Investment Milestone",
+                    description: "Global investment in renewable energy technologies reaches record levels as countries accelerate green transition efforts.",
+                    url: "https://example.com/renewable-energy",
+                    urlToImage: "https://images.unsplash.com/photo-1466611653911-95081537e5b7?w=800&h=400&fit=crop",
                     publishedAt: new Date(Date.now() - 3600000).toISOString(),
-                    content: "World leaders have reached a consensus..."
+                    content: "Global investment in renewable energy technologies has reached unprecedented levels..."
+                },
+                {
+                    source: { id: "techcrunch", name: "TechCrunch" },
+                    author: "TechCrunch Staff",
+                    title: "Space Technology Company Announces Mars Mission Plans",
+                    description: "Private space exploration company reveals detailed plans for upcoming Mars exploration mission scheduled for next decade.",
+                    url: "https://example.com/mars-mission",
+                    urlToImage: "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=800&h=400&fit=crop",
+                    publishedAt: new Date(Date.now() - 5400000).toISOString(),
+                    content: "A leading private space exploration company has revealed comprehensive plans..."
                 }
             ]
         };
@@ -218,31 +238,71 @@ app.get('/news', async (req, res) => {
         console.error('❌ Error fetching news:', error.response?.data || error.message);
         console.error('Error status:', error.response?.status);
         
-        // Fallback to mock data if API fails
-        console.log('🔄 Falling back to mock news data');
+        // Enhanced fallback with more realistic mock data
+        console.log('🔄 Using enhanced mock news data');
         const mockNews = {
             status: "ok",
-            totalResults: 2,
+            totalResults: 12,
             articles: [
                 {
-                    source: { id: "techcrunch", name: "TechCrunch" },
-                    author: "Tech Reporter",
-                    title: "Revolutionary AI Technology Transforms Industry",
-                    description: "New artificial intelligence technology is making waves across multiple industries.",
-                    url: "https://example.com/ai-technology",
-                    urlToImage: "https://via.placeholder.com/400x200/0066ff/ffffff?text=AI+Tech",
+                    source: { id: "wired", name: "Wired" },
+                    author: "Technology Editor",
+                    title: "The Future of Artificial Intelligence in Healthcare",
+                    description: "Exploring how AI technologies are transforming medical diagnosis, treatment planning, and patient care across global healthcare systems.",
+                    url: "https://example.com/ai-healthcare",
+                    urlToImage: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=800&h=400&fit=crop",
                     publishedAt: new Date().toISOString(),
-                    content: "Revolutionary AI technology is transforming industries..."
+                    content: "Artificial intelligence is revolutionizing healthcare in ways previously thought impossible..."
                 },
                 {
-                    source: { id: "wired", name: "Wired" },
-                    author: "Science Writer",
-                    title: "Breakthrough in Quantum Computing Research",
-                    description: "Scientists achieve new milestone in quantum computing technology.",
-                    url: "https://example.com/quantum-breakthrough",
-                    urlToImage: "https://via.placeholder.com/400x200/ff6600/ffffff?text=Quantum+News",
+                    source: { id: "the-verge", name: "The Verge" },
+                    author: "Science Reporter",
+                    title: "Climate Change Solutions: Innovation in Carbon Capture Technology",
+                    description: "New breakthrough technologies for carbon capture and storage offer hope in the fight against climate change.",
+                    url: "https://example.com/carbon-capture",
+                    urlToImage: "https://images.unsplash.com/photo-1569163139394-de44337bb0db?w=800&h=400&fit=crop",
+                    publishedAt: new Date(Date.now() - 900000).toISOString(),
+                    content: "Revolutionary carbon capture technologies are showing unprecedented efficiency..."
+                },
+                {
+                    source: { id: "ars-technica", name: "Ars Technica" },
+                    author: "Business Analyst",
+                    title: "Cryptocurrency Market Trends and Blockchain Innovation",
+                    description: "Analysis of current cryptocurrency market movements and emerging blockchain technologies reshaping digital finance.",
+                    url: "https://example.com/crypto-trends",
+                    urlToImage: "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=800&h=400&fit=crop",
                     publishedAt: new Date(Date.now() - 1800000).toISOString(),
-                    content: "Scientists achieve new milestone in quantum computing..."
+                    content: "The cryptocurrency market continues to evolve with new blockchain innovations..."
+                },
+                {
+                    source: { id: "nature", name: "Nature" },
+                    author: "Research Team",
+                    title: "Scientific Breakthrough in Gene Therapy Treatment",
+                    description: "Researchers achieve significant milestone in gene therapy treatments for rare genetic disorders.",
+                    url: "https://example.com/gene-therapy",
+                    urlToImage: "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=800&h=400&fit=crop",
+                    publishedAt: new Date(Date.now() - 2700000).toISOString(),
+                    content: "A major breakthrough in gene therapy has shown remarkable results in treating rare genetic disorders..."
+                },
+                {
+                    source: { id: "forbes", name: "Forbes" },
+                    author: "Business Editor",
+                    title: "Tech Industry Investment Patterns in Emerging Markets",
+                    description: "Analysis of venture capital and investment trends in emerging technology markets worldwide.",
+                    url: "https://example.com/tech-investment",
+                    urlToImage: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=400&fit=crop",
+                    publishedAt: new Date(Date.now() - 3600000).toISOString(),
+                    content: "Technology investment patterns are shifting toward emerging markets..."
+                },
+                {
+                    source: { id: "national-geographic", name: "National Geographic" },
+                    author: "Environmental Reporter",
+                    title: "Ocean Conservation Efforts Show Promising Results",
+                    description: "Global ocean conservation initiatives demonstrate significant positive impact on marine ecosystem recovery.",
+                    url: "https://example.com/ocean-conservation",
+                    urlToImage: "https://images.unsplash.com/photo-1439066615861-d1af74d74000?w=800&h=400&fit=crop",
+                    publishedAt: new Date(Date.now() - 4500000).toISOString(),
+                    content: "Ocean conservation efforts worldwide are showing unprecedented positive results..."
                 }
             ]
         };
