@@ -64,6 +64,49 @@ app.get('/debug', (req, res) => {
     });
 });
 
+// Test endpoint to directly test News API
+app.get('/test-newsapi', async (req, res) => {
+    try {
+        console.log('🧪 Testing News API directly...');
+        console.log('Environment check:');
+        console.log('- NEWS_API_KEY exists:', !!process.env.NEWS_API_KEY);
+        console.log('- NEWS_API_KEY length:', process.env.NEWS_API_KEY?.length);
+        
+        const url = `https://newsapi.org/v2/top-headlines?country=us&pageSize=3&apiKey=${process.env.NEWS_API_KEY}`;
+        console.log('Making test request to News API...');
+        
+        const response = await axios.get(url, {
+            headers: {
+                'User-Agent': 'News-Aggregator/1.0 (https://news-aggregator-pppy.onrender.com)'
+            }
+        });
+        
+        console.log('✅ Test successful! Articles:', response.data.articles?.length);
+        res.json({
+            success: true,
+            message: 'News API is working!',
+            articlesCount: response.data.articles?.length,
+            totalResults: response.data.totalResults,
+            firstArticle: response.data.articles?.[0] ? {
+                title: response.data.articles[0].title,
+                source: response.data.articles[0].source?.name,
+                hasImage: !!response.data.articles[0].urlToImage
+            } : null
+        });
+    } catch (error) {
+        console.error('❌ Test failed:', error.response?.data || error.message);
+        console.error('Status:', error.response?.status);
+        console.error('Headers:', error.response?.headers);
+        
+        res.json({
+            success: false,
+            error: error.response?.data || error.message,
+            status: error.response?.status,
+            message: 'News API test failed'
+        });
+    }
+});
+
 // Real headlines endpoint  
 app.get('/headlines', async (req, res) => {
     try {
