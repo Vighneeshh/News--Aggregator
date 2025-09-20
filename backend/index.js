@@ -48,6 +48,22 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Debug endpoint to check environment variables
+app.get('/debug', (req, res) => {
+    res.json({
+        status: 'DEBUG',
+        environment: {
+            hasNewsApiKey: !!process.env.NEWS_API_KEY,
+            newsApiKeyLength: process.env.NEWS_API_KEY?.length,
+            hasOpenAiKey: !!process.env.OPENAI_API_KEY,
+            openAiKeyLength: process.env.OPENAI_API_KEY?.length,
+            port: process.env.PORT,
+            nodeEnv: process.env.NODE_ENV
+        },
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Real headlines endpoint  
 app.get('/headlines', async (req, res) => {
     try {
