@@ -398,25 +398,30 @@ app.get('/search', async (req, res) => {
         
         console.log(`🔍 RSS Search for: "${searchQuery}"`);
         
-        // Get all articles from RSS feeds
-        const allArticles = [];
+        // Use the same RSS feeds as other endpoints
+        const rssFeeds = [
+            'https://feeds.bbci.co.uk/news/rss.xml',
+            'https://rss.cnn.com/rss/edition.rss'
+        ];
         
-        // Fetch from BBC RSS
-        try {
-            console.log('Fetching BBC RSS for search...');
-            const bbcArticles = await parseRSSFeed('https://feeds.bbci.co.uk/news/rss.xml');
-            allArticles.push(...bbcArticles);
-        } catch (error) {
-            console.log('BBC RSS search failed:', error.message);
-        }
+        let allArticles = [];
         
-        // Fetch from CNN RSS
-        try {
-            console.log('Fetching CNN RSS for search...');
-            const cnnArticles = await parseRSSFeed('https://rss.cnn.com/rss/edition.rss');
-            allArticles.push(...cnnArticles);
-        } catch (error) {
-            console.log('CNN RSS search failed:', error.message);
+        for (const feedUrl of rssFeeds) {
+            try {
+                console.log(`Searching in: ${feedUrl}`);
+                const response = await axios.get(feedUrl, {
+                    headers: {
+                        'User-Agent': 'News-Aggregator/1.0'
+                    },
+                    timeout: 10000
+                });
+                
+                const feedData = await parseRSSFeed(response.data);
+                allArticles = allArticles.concat(feedData.articles);
+                console.log(`✅ Got ${feedData.articles.length} articles from ${feedUrl}`);
+            } catch (feedError) {
+                console.log(`⚠️ Failed to search in ${feedUrl}:`, feedError.message);
+            }
         }
         
         // Filter articles based on search query
