@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const OpenAI = require('openai');
+const { parseString } = require('xml2js');
 require('dotenv').config();
 
 const app = express();
@@ -107,46 +108,111 @@ app.get('/test-newsapi', async (req, res) => {
     }
 });
 
-// Real headlines endpoint  
-app.get('/headlines', async (req, res) => {
-    try {
-        console.log('Fetching real headlines from News API...');
-        console.log('News API Key exists:', !!process.env.NEWS_API_KEY);
-        console.log('News API Key length:', process.env.NEWS_API_KEY?.length);
-        
-        const country = req.query.country || 'us';
-        const category = req.query.category || '';
-        const pageSize = req.query.pageSize || 20;
-        
-        let url = `https://newsapi.org/v2/top-headlines?country=${country}&pageSize=${pageSize}&apiKey=${process.env.NEWS_API_KEY}`;
-        if (category) {
-            url += `&category=${category}`;
-        }
-        
-        console.log('Making request to:', url.replace(process.env.NEWS_API_KEY, '[API_KEY]'));
-        const response = await axios.get(url, {
-            headers: {
-                'User-Agent': 'News-Aggregator/1.0 (https://news-aggregator-pppy.onrender.com)'
+// Helper function to parse RSS feeds
+function parseRSSFeed(xmlData) {
+    return new Promise((resolve, reject) => {
+        parseString(xmlData, (err, result) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            
+            try {
+                const items = result.rss.channel[0].item || [];
+                const articles = items.slice(0, 20).map(item => ({
+                    source: { 
+                        id: null, 
+                        name: result.rss.channel[0].title?.[0] || 'RSS Feed' 
+                    },
+                    author: item.author?.[0] || 'Unknown',
+                    title: item.title?.[0] || 'No Title',
+                    description: item.description?.[0]?.replace(/<[^>]*>/g, '') || 'No description',
+                    url: item.link?.[0] || '#',
+                    urlToImage: extractImageFromDescription(item.description?.[0]) || null,
+                    publishedAt: item.pubDate?.[0] || new Date().toISOString(),
+                    content: item.description?.[0]?.replace(/<[^>]*>/g, '').substring(0, 500) + '...' || ''
+                }));
+                
+                resolve({
+                    status: 'ok',
+                    totalResults: articles.length,
+                    articles: articles
+                });
+            } catch (parseErr) {
+                reject(parseErr);
             }
         });
-        console.log(`✅ Headlines fetched successfully: ${response.data.articles?.length} articles`);
+    });
+}
+
+// Helper function to extract images from RSS descriptions
+function extractImageFromDescription(description) {
+    if (!description) return null;
+    
+    const imgRegex = /<img[^>]+src="([^">]+)"/i;
+    const match = description.match(imgRegex);
+    if (match && match[1]) {
+        return match[1];
+    }
+    
+    // Fallback to a tech-related image
+    const fallbackImages = [
+        'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&h=400&fit=crop',
+        'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&h=400&fit=crop',
+        'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&h=400&fit=crop',
+        'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=400&fit=crop'
+    ];
+    
+    return fallbackImages[Math.floor(Math.random() * fallbackImages.length)];
+}
+
+// Real headlines endpoint using RSS feeds  
+app.get('/headlines', async (req, res) => {
+    try {
+        console.log('Fetching real headlines from RSS feeds...');
         
-        // Log first article to verify data quality
-        if (response.data.articles && response.data.articles.length > 0) {
-            const first = response.data.articles[0];
-            console.log('First article sample:', {
-                title: first.title?.substring(0, 50),
-                source: first.source?.name,
-                hasImage: !!first.urlToImage,
-                imageUrl: first.urlToImage?.substring(0, 50)
-            });
+        // Use reliable RSS feeds
+        const rssFeeds = [
+            'https://feeds.bbci.co.uk/news/rss.xml',
+            'https://rss.cnn.com/rss/edition.rss'
+        ];
+        
+        let allArticles = [];
+        
+        for (const feedUrl of rssFeeds) {
+            try {
+                console.log(`Fetching from: ${feedUrl}`);
+                const response = await axios.get(feedUrl, {
+                    headers: {
+                        'User-Agent': 'News-Aggregator/1.0'
+                    },
+                    timeout: 10000
+                });
+                
+                const feedData = await parseRSSFeed(response.data);
+                allArticles = allArticles.concat(feedData.articles.slice(0, 10));
+                console.log(`✅ Fetched ${feedData.articles.length} articles from ${feedUrl}`);
+            } catch (feedError) {
+                console.log(`⚠️ Failed to fetch from ${feedUrl}:`, feedError.message);
+            }
         }
         
-        res.json(response.data);
+        if (allArticles.length > 0) {
+            // Shuffle and limit results
+            allArticles = allArticles.sort(() => 0.5 - Math.random()).slice(0, 15);
+            
+            console.log(`✅ Total headlines fetched: ${allArticles.length}`);
+            res.json({
+                status: 'ok',
+                totalResults: allArticles.length,
+                articles: allArticles
+            });
+        } else {
+            throw new Error('No articles fetched from any RSS feed');
+        }
+        
     } catch (error) {
-        console.error('❌ Error fetching headlines:', error.response?.data || error.message);
-        console.error('Error status:', error.response?.status);
-        console.error('Error headers:', error.response?.headers);
+        console.error('❌ Error fetching headlines:', error.message);
         
         // Enhanced fallback with more realistic mock data
         console.log('🔄 Using enhanced mock headlines data');
@@ -200,43 +266,55 @@ app.get('/headlines', async (req, res) => {
     }
 });
 
-// Real news endpoint
+// Real news endpoint using RSS feeds
 app.get('/news', async (req, res) => {
     try {
-        console.log('Fetching real news from News API...');
-        console.log('News API Key exists:', !!process.env.NEWS_API_KEY);
+        console.log('Fetching real news from RSS feeds...');
         
-        const query = req.query.q || 'technology OR science OR business OR health';
-        const language = req.query.language || 'en';
-        const sortBy = req.query.sortBy || 'publishedAt';
-        const pageSize = req.query.pageSize || 20;
-        const page = req.query.page || 1;
+        // Use diverse RSS feeds for different topics
+        const rssFeeds = [
+            'https://feeds.bbci.co.uk/news/technology/rss.xml',
+            'https://rss.cnn.com/rss/cnn_tech.rss',
+            'https://feeds.bbci.co.uk/news/science_and_environment/rss.xml',
+            'https://feeds.bbci.co.uk/news/business/rss.xml'
+        ];
         
-        const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=${language}&sortBy=${sortBy}&pageSize=${pageSize}&page=${page}&apiKey=${process.env.NEWS_API_KEY}`;
+        let allArticles = [];
         
-        console.log('Making request to:', url.replace(process.env.NEWS_API_KEY, '[API_KEY]'));
-        const response = await axios.get(url, {
-            headers: {
-                'User-Agent': 'News-Aggregator/1.0 (https://news-aggregator-pppy.onrender.com)'
+        for (const feedUrl of rssFeeds) {
+            try {
+                console.log(`Fetching from: ${feedUrl}`);
+                const response = await axios.get(feedUrl, {
+                    headers: {
+                        'User-Agent': 'News-Aggregator/1.0'
+                    },
+                    timeout: 10000
+                });
+                
+                const feedData = await parseRSSFeed(response.data);
+                allArticles = allArticles.concat(feedData.articles.slice(0, 8));
+                console.log(`✅ Fetched ${feedData.articles.length} articles from ${feedUrl}`);
+            } catch (feedError) {
+                console.log(`⚠️ Failed to fetch from ${feedUrl}:`, feedError.message);
             }
-        });
-        console.log(`✅ News fetched successfully: ${response.data.articles?.length} articles`);
-        
-        // Log first article to verify data quality
-        if (response.data.articles && response.data.articles.length > 0) {
-            const first = response.data.articles[0];
-            console.log('First news article sample:', {
-                title: first.title?.substring(0, 50),
-                source: first.source?.name,
-                hasImage: !!first.urlToImage,
-                imageUrl: first.urlToImage?.substring(0, 50)
-            });
         }
         
-        res.json(response.data);
+        if (allArticles.length > 0) {
+            // Shuffle and limit results
+            allArticles = allArticles.sort(() => 0.5 - Math.random()).slice(0, 20);
+            
+            console.log(`✅ Total news articles fetched: ${allArticles.length}`);
+            res.json({
+                status: 'ok',
+                totalResults: allArticles.length,
+                articles: allArticles
+            });
+        } else {
+            throw new Error('No articles fetched from any RSS feed');
+        }
+        
     } catch (error) {
-        console.error('❌ Error fetching news:', error.response?.data || error.message);
-        console.error('Error status:', error.response?.status);
+        console.error('❌ Error fetching news:', error.message);
         
         // Enhanced fallback with more realistic mock data
         console.log('🔄 Using enhanced mock news data');
