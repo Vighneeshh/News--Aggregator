@@ -6,6 +6,23 @@ require('dotenv').config();
 
 const app = express();
 
+// Rate limiting for News API requests
+let lastApiCall = 0;
+const API_RATE_LIMIT = 1000; // 1 second between requests
+
+// Helper function to add delay between API calls
+const rateLimitedRequest = async (url, options) => {
+    const now = Date.now();
+    const timeSinceLastCall = now - lastApiCall;
+    
+    if (timeSinceLastCall < API_RATE_LIMIT) {
+        await new Promise(resolve => setTimeout(resolve, API_RATE_LIMIT - timeSinceLastCall));
+    }
+    
+    lastApiCall = Date.now();
+    return axios.get(url, options);
+};
+
 // Configure CORS for production
 const corsOptions = {
   origin: [
@@ -47,11 +64,26 @@ app.get('/headlines', async (req, res) => {
             url += `&category=${category}`;
         }
         
-        const response = await axios.get(url);
+        const response = await rateLimitedRequest(url, {
+            headers: {
+                'User-Agent': 'News-Aggregator-Bot/1.0',
+                'Accept': 'application/json',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1'
+            },
+            timeout: 15000
+        });
         console.log(`✅ Headlines fetched successfully: ${response.data.articles?.length} articles`);
         res.json(response.data);
     } catch (error) {
         console.error('❌ Error fetching headlines:', error.response?.data || error.message);
+        
+        // Check if it's a Cloudflare challenge
+        if (error.response?.data && typeof error.response.data === 'string' && error.response.data.includes('Just a moment')) {
+            console.log('🛡️ Cloudflare challenge detected, using mock data');
+        }
         
         // Fallback to mock data if API fails
         console.log('🔄 Falling back to mock headlines data');
@@ -97,11 +129,26 @@ app.get('/news', async (req, res) => {
         
         const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=${language}&sortBy=${sortBy}&pageSize=${pageSize}&page=${page}&apiKey=${process.env.NEWS_API_KEY}`;
         
-        const response = await axios.get(url);
+        const response = await rateLimitedRequest(url, {
+            headers: {
+                'User-Agent': 'News-Aggregator-Bot/1.0',
+                'Accept': 'application/json',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1'
+            },
+            timeout: 15000
+        });
         console.log(`✅ News fetched successfully: ${response.data.articles?.length} articles`);
         res.json(response.data);
     } catch (error) {
         console.error('❌ Error fetching news:', error.response?.data || error.message);
+        
+        // Check if it's a Cloudflare challenge
+        if (error.response?.data && typeof error.response.data === 'string' && error.response.data.includes('Just a moment')) {
+            console.log('🛡️ Cloudflare challenge detected, using mock data');
+        }
         
         // Fallback to mock data if API fails
         console.log('🔄 Falling back to mock news data');
