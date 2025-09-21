@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
+import config from './config'
 
 function App() {
   const [news, setNews] = useState([])
@@ -13,8 +14,8 @@ function App() {
   const fetchNews = async () => {
     setLoading(true)
     try {
-      console.log('Fetching news from https://news-aggregator-pppy.onrender.com/news')
-      const response = await fetch('https://news-aggregator-pppy.onrender.com/news')
+      console.log(`Fetching news from ${config.API_BASE_URL}/news`)
+      const response = await fetch(`${config.API_BASE_URL}/news`)
       const data = await response.json()
       setNews(data.articles || [])
       console.log('Fetched news:', data.articles?.length, 'articles')
@@ -28,8 +29,8 @@ function App() {
   const fetchHeadlines = async () => {
     setLoading(true)
     try {
-      console.log('Fetching headlines from https://news-aggregator-pppy.onrender.com/headlines')
-      const response = await fetch('https://news-aggregator-pppy.onrender.com/headlines')
+      console.log(`Fetching headlines from ${config.API_BASE_URL}/headlines`)
+      const response = await fetch(`${config.API_BASE_URL}/headlines`)
       const data = await response.json()
       setHeadlines(data.articles || [])
       console.log('Fetched headlines:', data.articles?.length, 'articles')
@@ -53,7 +54,7 @@ function App() {
     
     try {
       console.log('Getting AI summary for:', article.title)
-      const response = await fetch('https://news-aggregator-pppy.onrender.com/summarize', {
+      const response = await fetch(`${config.API_BASE_URL}/summarize`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

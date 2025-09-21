@@ -5,7 +5,20 @@ const OpenAI = require('openai');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+
+// Configure CORS for production
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',           // Local development
+    'http://localhost:5173',           // Vite dev server
+    'https://news-aggregator-9g8t.vercel.app/', // Replace with your actual Vercel domain
+    /^https:\/\/.*\.vercel\.app$/      // Allow all Vercel preview deployments
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Initialize OpenAI
