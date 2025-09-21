@@ -3,12 +3,14 @@
 function App() {
   const [news, setNews] = useState([])
   const [headlines, setHeadlines] = useState([])
+  const [searchResults, setSearchResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [summaryLoading, setSummaryLoading] = useState({})
   const [currentSummary, setCurrentSummary] = useState(null)
   const [showSummaryModal, setShowSummaryModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [activeSection, setActiveSection] = useState('all')
+  const [isSearching, setIsSearching] = useState(false)
 
   const fetchNews = async () => {
     setLoading(true)
@@ -38,6 +40,27 @@ function App() {
       alert('Error fetching headlines from deployed backend. Please check your connection.')
     }
     setLoading(false)
+  }
+
+  const searchNews = async (query) => {
+    if (!query.trim()) {
+      setSearchResults([])
+      setIsSearching(false)
+      return
+    }
+
+    setIsSearching(true)
+    try {
+      console.log('Searching news for:', query)
+      const response = await fetch(`https://news-aggregator-pppy.onrender.com/search?q=${encodeURIComponent(query)}`)
+      const data = await response.json()
+      setSearchResults(data.articles || [])
+      console.log('Search results:', data.articles?.length, 'articles')
+    } catch (error) {
+      console.error('Error searching news:', error)
+      setSearchResults([])
+    }
+    setIsSearching(false)
   }
 
   // Load data when component mounts
@@ -86,26 +109,20 @@ function App() {
   }
 
   const getFilteredArticles = () => {
+    // If we have a search term, use backend search results
+    if (searchTerm.trim()) {
+      return searchResults
+    }
+    
+    // Otherwise, show regular articles based on active section
     let articles = []
     
-    // Combine articles based on active section
     if (activeSection === 'all') {
       articles = [...news, ...headlines]
     } else if (activeSection === 'news') {
       articles = news
     } else if (activeSection === 'headlines') {
       articles = headlines
-    }
-    
-    // Filter by search term
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase()
-      articles = articles.filter(article => 
-        article.title?.toLowerCase().includes(searchLower) ||
-        article.description?.toLowerCase().includes(searchLower) ||
-        article.source?.name?.toLowerCase().includes(searchLower) ||
-        article.content?.toLowerCase().includes(searchLower)
-      )
     }
     
     return articles
@@ -130,7 +147,20 @@ function App() {
               type="text"
               placeholder="🔍 Search articles by title, description, source, or content..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value)
+                // Debounce search - search after user stops typing for 500ms
+                clearTimeout(window.searchTimeout)
+                window.searchTimeout = setTimeout(() => {
+                  searchNews(e.target.value)
+                }, 500)
+              }}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  clearTimeout(window.searchTimeout)
+                  searchNews(searchTerm)
+                }
+              }}
               style={{
                 width: '100%',
                 padding: '16px 50px 16px 20px',
@@ -154,7 +184,12 @@ function App() {
             />
             {searchTerm && (
               <button
-                onClick={() => setSearchTerm('')}
+                onClick={() => {
+                  setSearchTerm('')
+                  setSearchResults([])
+                  setIsSearching(false)
+                  clearTimeout(window.searchTimeout)
+                }}
                 style={{
                   position: 'absolute',
                   right: '15px',
@@ -221,7 +256,11 @@ function App() {
               color: '#cbd5e1',
               fontSize: '16px'
             }}>
-              Found {getFilteredArticles().length} articles matching "{searchTerm}"
+              {isSearching ? (
+                '🔍 Searching RSS feeds...'
+              ) : (
+                `Found ${getFilteredArticles().length} articles matching "${searchTerm}"`
+              )}
             </div>
           )}
         </div>

@@ -388,7 +388,7 @@ app.get('/news', async (req, res) => {
     }
 });
 
-// Search endpoint for custom queries
+// Search endpoint using RSS feeds
 app.get('/search', async (req, res) => {
     try {
         const searchQuery = req.query.q;
@@ -396,22 +396,52 @@ app.get('/search', async (req, res) => {
             return res.status(400).json({ error: 'Search query is required' });
         }
         
-        console.log(`🔍 Searching for: "${searchQuery}"`);
-        const language = req.query.language || 'en';
-        const sortBy = req.query.sortBy || 'publishedAt';
-        const pageSize = req.query.pageSize || 50;
-        const page = req.query.page || 1;
+        console.log(`🔍 RSS Search for: "${searchQuery}"`);
         
-        const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(searchQuery)}&language=${language}&sortBy=${sortBy}&pageSize=${pageSize}&page=${page}&apiKey=${process.env.NEWS_API_KEY}`;
+        // Get all articles from RSS feeds
+        const allArticles = [];
         
-        const response = await axios.get(url);
-        console.log(`✅ Search results: ${response.data.articles?.length} articles found for "${searchQuery}"`);
-        res.json(response.data);
+        // Fetch from BBC RSS
+        try {
+            console.log('Fetching BBC RSS for search...');
+            const bbcArticles = await parseRSSFeed('https://feeds.bbci.co.uk/news/rss.xml');
+            allArticles.push(...bbcArticles);
+        } catch (error) {
+            console.log('BBC RSS search failed:', error.message);
+        }
+        
+        // Fetch from CNN RSS
+        try {
+            console.log('Fetching CNN RSS for search...');
+            const cnnArticles = await parseRSSFeed('https://rss.cnn.com/rss/edition.rss');
+            allArticles.push(...cnnArticles);
+        } catch (error) {
+            console.log('CNN RSS search failed:', error.message);
+        }
+        
+        // Filter articles based on search query
+        const searchLower = searchQuery.toLowerCase();
+        const filteredArticles = allArticles.filter(article => 
+            article.title?.toLowerCase().includes(searchLower) ||
+            article.description?.toLowerCase().includes(searchLower) ||
+            article.source?.name?.toLowerCase().includes(searchLower) ||
+            article.content?.toLowerCase().includes(searchLower)
+        );
+        
+        console.log(`✅ RSS Search results: ${filteredArticles.length} articles found for "${searchQuery}"`);
+        
+        res.json({
+            status: 'ok',
+            totalResults: filteredArticles.length,
+            articles: filteredArticles.slice(0, 50) // Limit to 50 results
+        });
+        
     } catch (error) {
-        console.error('❌ Error searching news:', error.response?.data || error.message);
+        console.error('❌ Error searching RSS news:', error.message);
         res.status(500).json({ 
             error: 'Search failed', 
-            message: 'Unable to search articles at this time' 
+            message: 'Unable to search articles at this time',
+            details: error.message
         });
     }
 });
