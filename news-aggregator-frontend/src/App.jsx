@@ -13,8 +13,8 @@ function App() {
   const fetchNews = async () => {
     setLoading(true)
     try {
-      console.log('Fetching news from http://localhost:5001/news')
-      const response = await fetch('http://localhost:5001/news')
+      console.log('Fetching news from https://news-aggregator-pppy.onrender.com/news')
+      const response = await fetch('https://news-aggregator-pppy.onrender.com/news')
       const data = await response.json()
       setNews(data.articles || [])
       console.log('Fetched news:', data.articles?.length, 'articles')
@@ -28,8 +28,8 @@ function App() {
   const fetchHeadlines = async () => {
     setLoading(true)
     try {
-      console.log('Fetching headlines from http://localhost:5001/headlines')
-      const response = await fetch('http://localhost:5001/headlines')
+      console.log('Fetching headlines from https://news-aggregator-pppy.onrender.com/headlines')
+      const response = await fetch('https://news-aggregator-pppy.onrender.com/headlines')
       const data = await response.json()
       setHeadlines(data.articles || [])
       console.log('Fetched headlines:', data.articles?.length, 'articles')
@@ -53,7 +53,7 @@ function App() {
     
     try {
       console.log('Getting AI summary for:', article.title)
-      const response = await fetch('http://localhost:5001/summarize', {
+      const response = await fetch('https://news-aggregator-pppy.onrender.com/summarize', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
