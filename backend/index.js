@@ -13,7 +13,7 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
 
-const PORT = 5001;
+const PORT = process.env.PORT || 5001;
 
 // Test endpoint
 app.get('/health', (req, res) => {
@@ -52,7 +52,7 @@ app.get('/headlines', async (req, res) => {
                     title: "Breaking: Major Technology Breakthrough Announced",
                     description: "Scientists have made a significant breakthrough in quantum computing technology.",
                     url: "https://example.com/tech-breakthrough",
-                    urlToImage: "https://via.placeholder.com/400x200/0066cc/ffffff?text=Tech+News",
+                    urlToImage: null,
                     publishedAt: new Date().toISOString(),
                     content: "Scientists have made a significant breakthrough..."
                 },
@@ -62,7 +62,7 @@ app.get('/headlines', async (req, res) => {
                     title: "Global Climate Summit Reaches Historic Agreement",
                     description: "World leaders have reached a consensus on new climate policies.",
                     url: "https://example.com/climate-summit",
-                    urlToImage: "https://via.placeholder.com/400x200/009900/ffffff?text=Climate+News",
+                    urlToImage: null,
                     publishedAt: new Date(Date.now() - 3600000).toISOString(),
                     content: "World leaders have reached a consensus..."
                 }
@@ -102,7 +102,7 @@ app.get('/news', async (req, res) => {
                     title: "Revolutionary AI Technology Transforms Industry",
                     description: "New artificial intelligence technology is making waves across multiple industries.",
                     url: "https://example.com/ai-technology",
-                    urlToImage: "https://via.placeholder.com/400x200/0066ff/ffffff?text=AI+Tech",
+                    urlToImage: null,
                     publishedAt: new Date().toISOString(),
                     content: "Revolutionary AI technology is transforming industries..."
                 },
@@ -112,7 +112,7 @@ app.get('/news', async (req, res) => {
                     title: "Breakthrough in Quantum Computing Research",
                     description: "Scientists achieve new milestone in quantum computing technology.",
                     url: "https://example.com/quantum-breakthrough",
-                    urlToImage: "https://via.placeholder.com/400x200/ff6600/ffffff?text=Quantum+News",
+                    urlToImage: null,
                     publishedAt: new Date(Date.now() - 1800000).toISOString(),
                     content: "Scientists achieve new milestone in quantum computing..."
                 }
