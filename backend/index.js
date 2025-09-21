@@ -11,7 +11,7 @@ const corsOptions = {
   origin: [
     'http://localhost:3000',           // Local development
     'http://localhost:5173',           // Vite dev server
-    'https://news-aggregator-9g8t.vercel.app/', // Replace with your actual Vercel domain
+    'https://news-aggregator-d3do.vercel.app', // Replace with your actual Vercel domain
     /^https:\/\/.*\.vercel\.app$/      // Allow all Vercel preview deployments
   ],
   credentials: true,
