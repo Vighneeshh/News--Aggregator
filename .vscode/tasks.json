@@ -8,6 +8,20 @@
 			"group": "build",
 			"isBackground": true,
 			"problemMatcher": []
+		},
+		{
+			"label": "Start Backend Server from Backend Dir",
+			"type": "shell",
+			"command": "cd backend && node index.js",
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Start Backend Server PowerShell",
+			"type": "shell",
+			"command": "Set-Location backend; node index.js",
+			"isBackground": true,
+			"group": "build"
 		}
 	]
 }
